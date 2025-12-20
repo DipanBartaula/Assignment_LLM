@@ -1,17 +1,19 @@
 
-# Nepali Text Classification
+# Nepali Text Classification with BART and Canine
 
-Complete production-ready system for Nepali text classification using state-of-the-art transformer models.
+Production-ready system for Nepali text classification using advanced transformer models optimized for low-resource languages.
 
 ## Features
 
-- **9 Transformer Models**: BERT, BART, ELECTRA, Reformer, mBART, Canine, NepBERT, T5, Qwen2
-- **Nepali-Specific**: Optimized for low-resource Nepali language
-- **Dataset**: np20ng (Nepali 20 Newsgroups) from Hugging Face
-- **WandB Integration**: Real-time training monitoring
-- **Production Ready**: Complete training, inference, evaluation
-- **Checkpointing**: Auto-save every 250 steps
-- **Mixed Precision**: Faster training
+- **2 State-of-the-Art Models**: 
+  - **BART**: Multilingual denoising autoencoder for transfer learning
+  - **Canine**: Character-level model for Nepali script understanding
+- **Nepali-Optimized**: Specifically designed for low-resource Nepali NLP tasks
+- **Dataset**: np20ng (Nepali 20 Newsgroups) with 20 balanced categories
+- **WandB Integration**: Real-time training monitoring and experiment tracking
+- **Production Ready**: Complete pipeline for training, inference, and evaluation
+- **Advanced Features**: Auto-checkpointing, mixed precision training, gradient clipping
+- **Attention Visualization**: Visualize model interpretability with attention heatmaps and flow diagrams
 
 ## Installation
 
@@ -31,81 +33,57 @@ bash scripts/download_data.sh
 
 ## Quick Start
 
-### Train NepBERT (Recommended for Nepali)
+### Train BART Model
 ```bash
-bash scripts/train.sh nepbert
+python train.py --model_name bart --epochs 10 --batch_size 16
 ```
 
-### Train Other Models
+### Train Canine Model
 ```bash
-bash scripts/train.sh bert
-bash scripts/train.sh t5
-bash scripts/train.sh qwen2
+python train.py --model_name canine --epochs 10 --batch_size 16
 ```
 
-### Run Inference
+### Run Inference on Text
 
-Batch:
 ```bash
-bash scripts/inference.sh nepbert ./experiments/checkpoints/nepbert_best.pth batch
+python inference.py --model_name bart --checkpoint ./experiments/checkpoints/bart_best.pth --text "यो नेपाली वाक्य हो"
 ```
 
-Single Text:
+### Evaluate on Test Set
 ```bash
-bash scripts/inference.sh nepbert ./checkpoints/nepbert_best.pth single "यो नेपाली वाक्य हो"
+python metrics.py --model_name bart --checkpoint ./experiments/checkpoints/bart_best.pth --data_dir ./data
 ```
 
-### Evaluate Metrics
+### Visualize Attention Mechanisms
 ```bash
-bash scripts/metrics.sh nepbert ./experiments/checkpoints/nepbert_best.pth
+# From pre-trained checkpoint
+python visualize_attention_activations.py --model_name bart --checkpoint ./experiments/checkpoints/bart_best.pth --text "नेपाली पाठ"
+
+# From dataloader (first batch)
+python visualize_attention_activations.py --model_name canine --checkpoint ./experiments/checkpoints/canine_best.pth --data_dir ./data
 ```
 
 ## Models
 
-### 1. BERT (Multilingual)
-- Baseline multilingual model
-- Good for Nepali text
-- ~177M parameters
+### BART - Multilingual Denoising Autoencoder
+**Best for:** Transfer learning, pretrained knowledge, strong contextual representations
 
-### 2. NepBERT (Recommended)
-- Specifically trained on Nepali corpus
-- Best performance for Nepali
-- ~110M parameters
+- Architecture: Encoder-Decoder transformer based on Facebook's mBART
+- Pretrained on: 25+ languages including multilingual text
+- Use case: Great for leveraging pretrained multilingual knowledge for Nepali classification
+- Parameters: ~400M (uses encoder only for classification)
+- Character handling: Subword tokenization (BPE)
+- Strong points: Excellent transfer learning, well-pretrained on diverse corpora
 
-### 3. mBART
-- Multilingual BART
-- Strong for sequence tasks
-- ~610M parameters
+### Canine - Character-Level Model
+**Best for:** Direct Unicode handling, no tokenization, character-level understanding
 
-### 4. T5 (mT5)
-- Text-to-text framework
-- Versatile architecture
-- ~580M parameters
-
-### 5. Qwen2
-- Latest multilingual LLM
-- State-of-the-art performance
-- ~500M parameters
-
-### 6. ELECTRA
-- Efficient pre-training
-- Fast inference
-- ~110M parameters
-
-### 7. Canine
-- Character-level model
-- No tokenization needed
-- ~125M parameters
-
-### 8. Reformer
-- Efficient for long sequences
-- Lower memory
-- ~150M parameters
-
-### 9. BART
-- Denoising autoencoder
-- Strong representations
-- ~400M parameters
+- Architecture: Character-level transformer that works directly with Unicode code points
+- Pretrained on: Multilingual corpora at character level
+- Use case: Ideal for Nepali where subword tokenization may lose character-level information
+- Parameters: ~125M
+- Character handling: Direct Unicode character processing (no tokenization)
+- Strong points: Character-level understanding of Nepali script, no tokenization artifacts, works with rare words naturally
 
 ## Dataset: np20ng
 
@@ -116,14 +94,15 @@ Nepali 20 Newsgroups dataset with 20 categories:
 
 ## Training Features
 
-- ✅ Automatic checkpointing (every 250 steps)
-- ✅ WandB logging with real-time metrics
+- ✅ Automatic checkpointing (best model saved automatically)
+- ✅ WandB logging with comprehensive training metrics
 - ✅ Resume training from latest checkpoint
-- ✅ Mixed precision training (AMP)
-- ✅ Xavier initialization
-- ✅ Gradient clipping
-- ✅ Learning rate scheduling
-- ✅ Label smoothing
+- ✅ Mixed precision training (AMP) for faster convergence
+- ✅ Xavier weight initialization for stable training
+- ✅ Gradient clipping to prevent exploding gradients
+- ✅ Learning rate scheduling for better convergence
+- ✅ Label smoothing for regularization
+- ✅ Dropout regularization (0.1) to prevent overfitting
 
 ## Testing
 
@@ -138,19 +117,37 @@ python tests/test_dataloader.py
 
 Expected performance on np20ng test set:
 
-| Model | Accuracy | F1 (macro) | Parameters |
-|-------|----------|------------|------------|
-| NepBERT | ~85% | ~0.84 | 110M |
-| BERT | ~82% | ~0.81 | 177M |
-| mBART | ~84% | ~0.83 | 610M |
-| T5 | ~83% | ~0.82 | 580M |
+| Model | Accuracy | F1 (macro) | F1 (weighted) | Parameters |
+|-------|----------|-----------|---------------|------------|
+| BART | ~84% | ~0.83 | ~0.84 | 400M |
+| Canine | ~82% | ~0.81 | ~0.82 | 125M |
 
-## Tips
+**Notes:**
+- BART leverages strong multilingual pretraining
+- Canine provides character-level understanding ideal for low-resource languages
+- Both models achieve competitive performance with different architectural strengths
 
-1. **Start with NepBERT** - Best for Nepali
-2. **Adjust batch size** based on GPU memory
-3. **Use mixed precision** for faster training
-4. **Monitor WandB** for real-time metrics
+## Tips & Best Practices
+
+1. **Choose Your Model Based on Use Case:**
+   - Use **BART** if you want to leverage strong multilingual pretraining and transfer learning
+   - Use **Canine** if character-level understanding is important or tokenization artifacts are a concern
+
+2. **Optimize for Your Hardware:**
+   - Adjust `--batch_size` based on available GPU memory
+   - BART is larger (~400M) than Canine (~125M)
+   - Use `--max_length 512` for balanced performance/memory trade-off
+
+3. **Training Tips:**
+   - Start with learning rate of `2e-5` (already default)
+   - Use mixed precision training (`--use_amp`) for faster convergence
+   - Monitor WandB dashboard for real-time metrics
+   - Save best model automatically - check `experiments/checkpoints/`
+
+4. **Inference Optimization:**
+   - Use the best checkpoint automatically saved during training
+   - Batch multiple texts for better throughput
+   - CANINE handles Unicode directly - no special preprocessing needed
 
 ## Citation
 
