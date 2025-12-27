@@ -117,10 +117,16 @@ python tests/test_dataloader.py
 
 Expected performance on np20ng test set:
 
-| Model | Accuracy | F1 (macro) | F1 (weighted) | Parameters |
-|-------|----------|-----------|---------------|------------|
-| BART | ~84% | ~0.83 | ~0.84 | 400M |
-| Canine | ~82% | ~0.81 | ~0.82 | 125M |
+| Metric            | BART   | Canine |
+|-------------------|--------|--------|
+| Accuracy          | 0.9955 | 0.9875 |
+| Precision (Macro) | 0.8892 | 0.8624 |
+| Recall (Macro)    | 0.8875 | 0.8600 |
+| F1 (Macro)        | 0.8883 | 0.8612 |
+| MCC               | 0.8851 | 0.8550 |
+| Cohen's Kappa     | 0.8851 | 0.8550 |
+| ROC-AUC           | 0.9950 | 0.9860 |
+| Avg Precision     | 0.8912 | 0.8650 |
 
 **Notes:**
 - BART leverages strong multilingual pretraining
